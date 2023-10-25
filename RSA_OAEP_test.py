@@ -4,12 +4,14 @@ import time
 if __name__ == '__main__':
     encrypter = RSAEncrypter(file_path='test.txt')
     encrypter.prepare_encrypt()
-    start_time = time.perf_counter()
+    start_time_encryption = time.perf_counter()
     encrypter.encrypt()
-    end_time = time.perf_counter()
-
+    end_time_decryption = time.perf_counter()
     encrypter.post_encrypt()
     encrypter.prepate_decrypt()
+    start_time_decryption = time.perf_counter()
     encrypter.decrypt()
+    end_time_decryption = time.perf_counter()
     print(encrypter.verify())
-    print(end_time-start_time)
+    print(f' Encryption time: {end_time_decryption-start_time_encryption}')
+    print(f' Decryption time: {end_time_decryption-start_time_decryption}')
