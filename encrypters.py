@@ -1,32 +1,31 @@
-from abc import ABC, abstractmethod
+import abc
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
-
 import os
 
-class Encrypter(ABC):
-    @abstractmethod
+class Encrypter(metaclass = abc.ABCMeta):
+    @abc.abstractmethod
     def encrypt(self) -> None:
         pass
-    @abstractmethod
+    @abc.abstractmethod
     def decrypt(self) -> None:
         pass
-    @abstractmethod
+    @abc.abstractmethod
     def prepare_encrypt(self) -> None:
         pass 
-    @abstractmethod
+    @abc.abstractmethod
     def post_encrypt(self) -> None:
         pass
-    @abstractmethod
+    @abc.abstractmethod
     def prepate_decrypt(self) -> None:
         pass
-    @abstractmethod
-    def verify(self) -> None:
+    @abc.abstractmethod
+    def verify(self) -> bool:
         pass
 
 
-class RSAEncrypter(Encrypter):
+class RSA_OAEP(Encrypter):
     def __init__(self, file_path: str):
         self.original_file_path = file_path 
 
@@ -67,6 +66,5 @@ class RSAEncrypter(Encrypter):
                 label=None
             )
         )
-
-    def verify(self):
+    def verify(self) -> bool:
         return self.file_content == self.decrypted_content

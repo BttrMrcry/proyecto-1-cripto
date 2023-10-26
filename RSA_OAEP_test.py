@@ -1,8 +1,8 @@
-from encrypters import RSAEncrypter
+from encrypters import RSA_OAEP
 import time
 
 if __name__ == '__main__':
-    encrypter = RSAEncrypter(file_path='test.txt')
+    encrypter = RSA_OAEP(file_path='test.txt')
     encrypter.prepare_encrypt()
     start_time_encryption = time.perf_counter()
     encrypter.encrypt()

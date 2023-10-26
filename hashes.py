@@ -1,23 +1,22 @@
-from abc import ABC, abstractmethod
+import abc
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from os import urandom, path
-from time import perf_counter
 
-class Hashes(ABC):
-    @abstractmethod
+class Hashes(metaclass = abc.ABCMeta):
+    @abc.abstractmethod
     def hash(self) -> None:
         pass
-    @abstractmethod
+    @abc.abstractmethod
     def prepare_hash(self) -> None:
         pass 
-    @abstractmethod
+    @abc.abstractmethod
     def post_hash(self) -> None:
         pass
-    @abstractmethod
-    def verify(self) -> None:
+    @abc.abstractmethod
+    def verify(self) -> bool:
         pass
 
-class Scrypt_Algorith(Hashes):
+class ScryptAlgorithm(Hashes):
     def __init__(self, file_path: str):
         self.original_file_path = file_path
     
@@ -41,9 +40,9 @@ class Scrypt_Algorith(Hashes):
         with open(result_file_path, 'wb') as file:
             file.write(self.key)
 
-    def verify(self) -> None:
+    def verify(self) -> bool:
         try:
             self.kdf.verify(self.file_content, self.key)
-            print("Hash llevado a cabo de manera satisfactoria")
+            return True
         except:
-            print("El hash no coincide, posible elemento modificado")
+            return False
