@@ -132,3 +132,38 @@ class Chacha20(Encrypter):
     
     def verify(self) -> bool:
         return self.file_content == self.decrypted_content
+    
+    
+
+class Aes_gcm(Encrypter):
+    def __init__(self, file_path: str):
+        self.original_file_path = file_path 
+    
+    def prepare_encrypt(self) -> None:
+        key = os.urandom(32)
+        counter = 0
+        algorithm = algorithms.AES(key)
+        nonce = os.urandom(12)
+        self.cipher = Cipher(algorithm, mode = modes.GCM(nonce))
+        self.encryptor = self.cipher.encryptor()
+
+        with open(self.original_file_path, 'rb') as file:
+            self.file_content = file.read()
+        
+    def encrypt(self) -> None:
+        self.encrypted_content = self.encryptor.update(self.file_content)
+
+    def post_encrypt(self) -> None:
+        result_file_path = f"{os.path.splitext(self.original_file_path)[0]}.bin"
+        with open(result_file_path, 'wb') as file:
+            file.write(self.encrypted_content)
+
+    def prepate_decrypt(self) -> None:
+        self.decryptor = self.cipher.decryptor()
+
+    def decrypt(self) -> None:
+        self.decrypted_content = self.decryptor.update(self.encrypted_content)                    
+    
+    def verify(self) -> bool:
+        return self.file_content == self.decrypted_content
+
