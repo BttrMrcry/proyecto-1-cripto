@@ -1,6 +1,7 @@
 import abc
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.primitives import hashes #para sha 2 y sha 3
+import cryptography.exceptions
 from os import urandom, path
 
 class Hasher(metaclass = abc.ABCMeta):
@@ -73,6 +74,7 @@ class sha3 (Hasher):#heredo de la clase Hashes todos sus métodos
         return hash_resultante == self.hash_result
 
 class ScryptAlgorithm(Hasher):
+
     def prepare_hash(self) -> None:
         self.salt = urandom(128)
         self.kdf = Scrypt(
@@ -83,7 +85,7 @@ class ScryptAlgorithm(Hasher):
             p=1
         )
         with open(self.original_file_path, "rb") as file:
-            self.file_content = file.read()
+           self.file_content = file.read()
 
     def hash(self) -> None:
         self.key = self.kdf.derive(key_material=self.file_content)
@@ -95,11 +97,17 @@ class ScryptAlgorithm(Hasher):
             file.write(self.key)
     
     def prepare_verify(self) -> None:
-        return None
+        self.kdf = Scrypt(
+            salt=self.salt,
+            length=4,
+            n=2**14,
+            r=8,
+            p=1
+        )
 
     def verify(self) -> bool:
         try:
             self.kdf.verify(self.file_content, self.key)
             return True
-        except:
+        except(cryptography.exceptions.InvalidKey, cryptography.exceptions.AlreadyFinalized):
             return False
