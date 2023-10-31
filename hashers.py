@@ -3,7 +3,9 @@ from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.primitives import hashes #para sha 2 y sha 3
 from os import urandom, path
 
-class Hashes(metaclass = abc.ABCMeta):
+class Hasher(metaclass = abc.ABCMeta):
+    def __init__(self, file_path: str):
+        self.original_file_path = file_path
     @abc.abstractmethod
     def hash(self) -> None:
         pass
@@ -14,13 +16,13 @@ class Hashes(metaclass = abc.ABCMeta):
     def post_hash(self) -> None:
         pass
     @abc.abstractmethod
+    def prepare_verify(self) -> None:
+        pass
+    @abc.abstractmethod
     def verify(self) -> bool:
         pass
 
-class sha2 (Hashes):#heredo de la clase Hashes todos sus métodos
-    def __init__(self, file_path: str):#método constructor, recibe un path y lo guarda como un atributo del objeto
-        self.original_file_path = file_path
-    
+class sha2 (Hasher):#heredo de la clase Hashes todos sus métodos
     def prepare_hash(self) -> None:
         self.digest = hashes.Hash(hashes.SHA512())#crea el objeto que va a crear los hashes (es un atributo del objeto sha2)
 
@@ -32,21 +34,20 @@ class sha2 (Hashes):#heredo de la clase Hashes todos sus métodos
 
     def post_hash(self) -> None:
         self.hash_result = self.digest.finalize()#Regresa el hash objenido. Regresa los bytes
+        return
         result_file_path = f"{path.splitext(self.original_file_path)[0]}.bin"  #se guarda el resultado del hash en el archivo con extension .bin
         with open(result_file_path, 'wb') as file:
             file.write(self.hash_result)
     
+    def prepare_verify(self) -> None:
+        self.verification_digest = hashes.Hash(hashes.SHA512())
+    
     def verify(self) -> bool:
-        hash_calculado = hashes.Hash(hashes.SHA512())
-        hash_calculado.update(self.data)
-        hash_resultante = hash_calculado.finalize()
-
+        self.verification_digest.update(self.data)
+        hash_resultante = self.verification_digest.finalize()
         return hash_resultante == self.hash_result
 
-class sha3 (Hashes):#heredo de la clase Hashes todos sus métodos
-    def __init__(self, file_path: str):#método constructor, recibe un path y lo guarda como un atributo del objeto
-        self.original_file_path = file_path
-    
+class sha3 (Hasher):#heredo de la clase Hashes todos sus métodos 
     def prepare_hash(self) -> None:
         self.digest = hashes.Hash(hashes.SHA3_512())#crea el objeto que va a crear los hashes (es un atributo del objeto sha3)
 
@@ -58,21 +59,20 @@ class sha3 (Hashes):#heredo de la clase Hashes todos sus métodos
 
     def post_hash(self) -> None:
         self.hash_result = self.digest.finalize()#Regresa el hash objenido. Regresa los bytes
+        return
         result_file_path = f"{path.splitext(self.original_file_path)[0]}.bin"  #se guarda el resultado del hash en el archivo con extension .bin
         with open(result_file_path, 'wb') as file:
             file.write(self.hash_result)
     
+    def prepare_verify(self) -> None:
+        self.verification_digest = hashes.Hash(hashes.SHA3_512())
+    
     def verify(self) -> bool:
-        hash_calculado = hashes.Hash(hashes.SHA3_512())
-        hash_calculado.update(self.data)
-        hash_resultante = hash_calculado.finalize()
-
+        self.verification_digest.update(self.data)
+        hash_resultante = self.verification_digest.finalize()
         return hash_resultante == self.hash_result
 
-class ScryptAlgorithm(Hashes):
-    def __init__(self, file_path: str):
-        self.original_file_path = file_path
-    
+class ScryptAlgorithm(Hasher):
     def prepare_hash(self) -> None:
         self.salt = urandom(128)
         self.kdf = Scrypt(
@@ -89,9 +89,13 @@ class ScryptAlgorithm(Hashes):
         self.key = self.kdf.derive(key_material=self.file_content)
 
     def post_hash(self) -> None:
+        return
         result_file_path = f"{path.splitext(self.original_file_path)[0]}.bin"
         with open(result_file_path, 'wb') as file:
             file.write(self.key)
+    
+    def prepare_verify(self) -> None:
+        return None
 
     def verify(self) -> bool:
         try:

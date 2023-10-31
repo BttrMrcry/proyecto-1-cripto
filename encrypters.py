@@ -5,6 +5,9 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 class Encrypter(metaclass = abc.ABCMeta):
+    def __init__(self, file_path: str):
+        self.original_file_path = file_path 
+
     @abc.abstractmethod
     def encrypt(self) -> None:
         pass
@@ -26,9 +29,6 @@ class Encrypter(metaclass = abc.ABCMeta):
 
 
 class RSA_OAEP(Encrypter):
-    def __init__(self, file_path: str):
-        self.original_file_path = file_path 
-
     def prepare_encrypt(self) -> None:
         self.private_key = rsa.generate_private_key(
             public_exponent=65537,
@@ -50,6 +50,7 @@ class RSA_OAEP(Encrypter):
         )
     
     def post_encrypt(self) -> None:
+        return None
         result_file_path = f"{os.path.splitext(self.original_file_path)[0]}.bin"
         with open(result_file_path, 'wb') as file:
             file.write(self.encrypted_content)
@@ -70,9 +71,6 @@ class RSA_OAEP(Encrypter):
         return self.file_content == self.decrypted_content
     
 class Aes_ecb(Encrypter):
-    def __init__(self, file_path: str):
-        self.original_file_path = file_path 
-    
     def prepare_encrypt(self) -> None:
         key = os.urandom(32)
         counter = 0
@@ -87,6 +85,7 @@ class Aes_ecb(Encrypter):
         self.encrypted_content = self.encryptor.update(self.file_content)
 
     def post_encrypt(self) -> None:
+        return None
         result_file_path = f"{os.path.splitext(self.original_file_path)[0]}.bin"
         with open(result_file_path, 'wb') as file:
             file.write(self.encrypted_content)
@@ -101,9 +100,6 @@ class Aes_ecb(Encrypter):
         return self.file_content == self.decrypted_content
     
 class Chacha20(Encrypter):
-    def __init__(self, file_path: str):
-        self.original_file_path = file_path 
-    
     def prepare_encrypt(self) -> None:
         nonce = os.urandom(8)
         key = os.urandom(32)
@@ -120,6 +116,7 @@ class Chacha20(Encrypter):
         self.encrypted_content = self.encryptor.update(self.file_content)
 
     def post_encrypt(self) -> None:
+        return None
         result_file_path = f"{os.path.splitext(self.original_file_path)[0]}.bin"
         with open(result_file_path, 'wb') as file:
             file.write(self.encrypted_content)
@@ -136,9 +133,6 @@ class Chacha20(Encrypter):
     
 
 class Aes_gcm(Encrypter):
-    def __init__(self, file_path: str):
-        self.original_file_path = file_path 
-    
     def prepare_encrypt(self) -> None:
         key = os.urandom(32)
         counter = 0
@@ -154,6 +148,7 @@ class Aes_gcm(Encrypter):
         self.encrypted_content = self.encryptor.update(self.file_content)
 
     def post_encrypt(self) -> None:
+        return None
         result_file_path = f"{os.path.splitext(self.original_file_path)[0]}.bin"
         with open(result_file_path, 'wb') as file:
             file.write(self.encrypted_content)

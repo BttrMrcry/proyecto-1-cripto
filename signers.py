@@ -6,6 +6,8 @@ from cryptography.exceptions import InvalidSignature
 from os import path
 
 class Signer(metaclass = abc.ABCMeta):
+    def __init__(self, file_path: str):
+        self.original_file_path = file_path
     @abc.abstractmethod
     def sign(self) -> None:
         pass
@@ -20,9 +22,6 @@ class Signer(metaclass = abc.ABCMeta):
         pass
 
 class ECDSA_P521(Signer):
-    def __init__(self, file_path: str):
-        self.original_file_path = file_path
-    
     def prepare_sign(self) -> None:
         self.private_key = ec.generate_private_key(
         ec.SECP521R1()
@@ -37,6 +36,7 @@ class ECDSA_P521(Signer):
             signature_algorithm=ec.ECDSA(hashes.SHA256()))
 
     def post_sign(self) -> None:
+        return
         result_file_path = f"{path.splitext(self.original_file_path)[0]}.bin"
         with open(result_file_path, 'wb') as file:
             file.write(self.signed_content)
@@ -78,6 +78,7 @@ class RSA_PSS(Signer):
         )
     
     def post_sign(self) -> None:
+        return
         result_file_path = f"{path.splitext(self.original_file_path)[0]}.bin"
         with open(result_file_path, 'wb') as file:
             file.write(self.signed_content)
@@ -114,6 +115,7 @@ class ED_25519(Signer):
             self.file_content)
 
     def post_sign(self) -> None:
+        return
         result_file_path = f"{path.splitext(self.original_file_path)[0]}.bin"
         with open(result_file_path, 'wb') as file:
             file.write(self.signed_content)
