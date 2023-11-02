@@ -38,13 +38,12 @@ class RSA_OAEP(Encrypter):
         )
         self.public_key = self.private_key.public_key()
         
-        with open(self.original_file_path, 'r') as file:
-            readed_content = file.read().strip().replace('\n', '')
-        divided_text = textwrap.wrap(readed_content, 190)   
-        self.divided_original_bytes = [block.encode() for block in divided_text]
-        self.divided_encrypted_bytes = []
-        self.divided_decrypted_bytes = []
-        self.file_content = ''.join(divided_text)
+        with open(self.original_file_path, 'rb') as file:
+            readed_content = file.read() 
+        self.divided_original_bytes = [readed_content[x:x+190] for x in range(0, len(readed_content), 190)]
+        self.divided_encrypted_bytes:list[bytes] = []
+        self.divided_decrypted_bytes:list[bytes] = []
+        self.file_content = readed_content
 
     
     def encrypt(self) -> None:
@@ -78,10 +77,12 @@ class RSA_OAEP(Encrypter):
                 label=None
                 )
             )
-            self.divided_decrypted_bytes.append(decrypoted_block.decode())
+            self.divided_decrypted_bytes.append(decrypoted_block)
 
     def verify(self) -> bool:
-        decrypted_content = ''.join(self.divided_decrypted_bytes)
+        decrypted_content = bytes()
+        for block in self.divided_decrypted_bytes:
+            decrypted_content += block
         return self.file_content == decrypted_content
     
 class Aes_ecb(Encrypter):
