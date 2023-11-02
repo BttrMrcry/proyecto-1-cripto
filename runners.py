@@ -2,6 +2,7 @@ import hashers, signers, encrypters, time, gc, json, os
 from typing import Type
 from dataclasses import dataclass
 from enum import Enum
+from tqdm import tqdm
 
 
 
@@ -10,6 +11,7 @@ CONFIG_FILE_PATH = 'settings.json'
 class CONFIG_DATA(Enum):
     TEST_FOLDER_PATH = 'testFolderPath'
     NUM_ITERATIONS = 'numberOfIterations'
+    DESABLE_ENCRYPTION_ALGORITHM = 'desableEncryptionAlgorithm'
 
 @dataclass
 class Result: 
@@ -90,14 +92,18 @@ def run_algorithms():
         config = json.load(config_file)
     NUM_ITERATIONS = config[CONFIG_DATA.NUM_ITERATIONS.value]
     TEST_FOLDER_PATH = config[CONFIG_DATA.TEST_FOLDER_PATH.value]
+    DESABLED_ALGORITHMS = config[CONFIG_DATA.DESABLE_ENCRYPTION_ALGORITHM.value]
     test_file_names = os.listdir(TEST_FOLDER_PATH)
     test_files = [os.path.join(TEST_FOLDER_PATH, name) for name in test_file_names]
 
     print('========Encryption algorithms section========')
     for Encrypter in encrypters.Encrypter.__subclasses__():
+        if Encrypter.__name__ in DESABLED_ALGORITHMS:
+            print(f'Skipping: {Encrypter.__name__}')
+            continue
         print(f'testing: {Encrypter.__name__}')
-        for test in test_files:
-            for iteration in range(NUM_ITERATIONS):
+        for test in tqdm(test_files):
+            for iteration in tqdm(range(NUM_ITERATIONS)):
                 working_Encrypter = Encrypter(test)
                 test_result = benchmark_encrypter(working_Encrypter)
                 if not test_result.verified:
@@ -105,9 +111,12 @@ def run_algorithms():
 
     print('========Hashing algorithms section========')
     for Hasher in hashers.Hasher.__subclasses__():
+        if Hasher.__name__ in DESABLED_ALGORITHMS:
+            print(f'Skipping: {Hasher.__name__}')
+            continue
         print(f'testing: {Hasher.__name__}')
-        for test in test_files:
-            for iteration in range(NUM_ITERATIONS):
+        for test in tqdm(test_files):
+            for iteration in tqdm(range(NUM_ITERATIONS)):
                 working_hasher = Hasher(test)
                 test_result = benchmark_hasher(working_hasher)
                 if not test_result.verified:
@@ -115,9 +124,12 @@ def run_algorithms():
 
     print('========Signing algorithms section========')
     for Signer in signers.Signer.__subclasses__():
+        if Signer.__name__ in DESABLED_ALGORITHMS:
+            print(f'Skipping: {Signer.__name__}')
+            continue
         print(f'testing: {Signer.__name__}')
-        for test in test_files:
-            for iteration in range(NUM_ITERATIONS):
+        for test in tqdm(test_files):
+            for iteration in tqdm(range(NUM_ITERATIONS)):
                 working_singer = Signer(test)
                 test_result = benchmark_signer(working_singer)
                 if not test_result.verified:

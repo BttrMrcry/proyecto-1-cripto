@@ -1,8 +1,10 @@
-import abc, os, struct
+import abc, os, struct, textwrap
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import padding as primitives_padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+
 
 class Encrypter(metaclass = abc.ABCMeta):
     def __init__(self, file_path: str):
@@ -35,19 +37,27 @@ class RSA_OAEP(Encrypter):
             key_size=2048,
         )
         self.public_key = self.private_key.public_key()
-        with open(self.original_file_path, 'rb') as file:
-            self.file_content = file.read()
+        
+        with open(self.original_file_path, 'r') as file:
+            readed_content = file.read().strip().replace('\n', '')
+        divided_text = textwrap.wrap(readed_content, 190)   
+        self.divided_original_bytes = [block.encode() for block in divided_text]
+        self.divided_encrypted_bytes = []
+        self.divided_decrypted_bytes = []
+        self.file_content = ''.join(divided_text)
 
     
     def encrypt(self) -> None:
-        self.encrypted_content = self.public_key.encrypt(
-            self.file_content,
-            padding.OAEP(
-                mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                algorithm=hashes.SHA256(),
-                label=None
+        for block in self.divided_original_bytes:
+            encrypted_block = self.public_key.encrypt(
+                block,
+                padding.OAEP(
+                    mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                    algorithm=hashes.SHA256(),
+                    label=None
+                )
             )
-        )
+            self.divided_encrypted_bytes.append(encrypted_block)
     
     def post_encrypt(self) -> None:
         return None
@@ -59,30 +69,34 @@ class RSA_OAEP(Encrypter):
         return None
 
     def decrypt(self) -> None:
-        self.decrypted_content = self.private_key.decrypt(
-            self.encrypted_content,
+        for encrypted_block in self.divided_encrypted_bytes:
+            decrypoted_block = self.private_key.decrypt(
+            encrypted_block,
             padding.OAEP(
                 mgf=padding.MGF1(algorithm=hashes.SHA256()),
                 algorithm=hashes.SHA256(),
                 label=None
+                )
             )
-        )
+            self.divided_decrypted_bytes.append(decrypoted_block.decode())
+
     def verify(self) -> bool:
-        return self.file_content == self.decrypted_content
+        decrypted_content = ''.join(self.divided_decrypted_bytes)
+        return self.file_content == decrypted_content
     
 class Aes_ecb(Encrypter):
     def prepare_encrypt(self) -> None:
         key = os.urandom(32)
-        counter = 0
-        algorithm = algorithms.AES(key)
-        self.cipher = Cipher(algorithm, mode = modes.ECB())
+        self.algorithm = algorithms.AES(key)
+        self.cipher = Cipher(self.algorithm, mode = modes.ECB())
         self.encryptor = self.cipher.encryptor()
-
         with open(self.original_file_path, 'rb') as file:
             self.file_content = file.read()
         
     def encrypt(self) -> None:
-        self.encrypted_content = self.encryptor.update(self.file_content)
+        padder = primitives_padding.PKCS7(self.algorithm.block_size).padder()
+        padded_data = padder.update(self.file_content) + padder.finalize()
+        self.encrypted_content = self.encryptor.update(padded_data)
 
     def post_encrypt(self) -> None:
         return None
@@ -91,10 +105,14 @@ class Aes_ecb(Encrypter):
             file.write(self.encrypted_content)
 
     def prepate_decrypt(self) -> None:
+        
         self.decryptor = self.cipher.decryptor()
 
+
     def decrypt(self) -> None:
-        self.decrypted_content = self.decryptor.update(self.encrypted_content)                    
+        padder = primitives_padding.PKCS7(self.algorithm.block_size).unpadder() 
+        padded_data = self.decryptor.update(self.encrypted_content)
+        self.decrypted_content = padder.update(padded_data) + padder.finalize()
     
     def verify(self) -> bool:
         return self.file_content == self.decrypted_content
