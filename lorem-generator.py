@@ -6,4 +6,4 @@ def generate_lorem_file(file_size):
             f.write(lorem.get_sentence() + '\n')
     print(f'File generated successfully with size {file_size} bytes.')
 
-generate_lorem_file(1024 * 1024 * 10)  # generates a 1 MB file
+generate_lorem_file(1024 * 100 )
