@@ -1,10 +1,11 @@
-import hashers, signers, encrypters, time, gc, json, os
+import hashers, signers, encrypters, time, gc, json, os, csv
 from typing import Type
 from dataclasses import dataclass
 from enum import Enum
 from tqdm import tqdm
+import concurrent.futures
 
-
+CSV_fIELDS = ['Iteration', 'Encryption Time', 'Decryption Time', 'Verification']
 
 CONFIG_FILE_PATH = 'settings.json'
 
@@ -12,7 +13,8 @@ class CONFIG_DATA(Enum):
     TEST_FOLDER_PATH = 'testFolderPath'
     NUM_ITERATIONS = 'numberOfIterations'
     DESABLE_ENCRYPTION_ALGORITHM = 'desableEncryptionAlgorithm'
-
+    RESULTS_FOLDER_PATH = 'resultsFolderPath'
+    ENABLE_MULTIPROCESSING = 'enableMultiprocessing'
 @dataclass
 class Result: 
     encryption_time:int
@@ -93,8 +95,19 @@ def run_algorithms():
     NUM_ITERATIONS = config[CONFIG_DATA.NUM_ITERATIONS.value]
     TEST_FOLDER_PATH = config[CONFIG_DATA.TEST_FOLDER_PATH.value]
     DESABLED_ALGORITHMS = config[CONFIG_DATA.DESABLE_ENCRYPTION_ALGORITHM.value]
+    RESULTS_FOLDER_PATH = config[CONFIG_DATA.RESULTS_FOLDER_PATH.value]
+    ENABLE_MULTIPROCESSING = config[CONFIG_DATA.ENABLE_MULTIPROCESSING.value]
+    try:
+        os.mkdir(RESULTS_FOLDER_PATH)
+    except:
+        print('Folder already exist')
     test_file_names = os.listdir(TEST_FOLDER_PATH)
     test_files = [os.path.join(TEST_FOLDER_PATH, name) for name in test_file_names]
+    cores = 1
+    if ENABLE_MULTIPROCESSING:
+        cores = os.cpu_count()
+        if cores:
+            cores = max(cores, 1)
 
     print('========Encryption algorithms section========')
     for Encrypter in encrypters.Encrypter.__subclasses__():
@@ -102,12 +115,22 @@ def run_algorithms():
             print(f'Skipping: {Encrypter.__name__}')
             continue
         print(f'testing: {Encrypter.__name__}')
-        for test in tqdm(test_files):
-            for iteration in tqdm(range(NUM_ITERATIONS)):
-                working_Encrypter = Encrypter(test)
-                test_result = benchmark_encrypter(working_Encrypter)
-                if not test_result.verified:
-                    print('Something is wrong')
+        for test in test_files:
+            test_file_name = os.path.basename(test)
+            csv_filename = os.path.join(RESULTS_FOLDER_PATH, f'{Encrypter.__name__}_{test_file_name.split(".")[0]}.csv')
+            print(f'Test vector: {test_file_name}')
+            results = []
+            with concurrent.futures.ProcessPoolExecutor(max_workers=cores) as Executor:
+                encryption_workers = [Encrypter(test) for _ in range(NUM_ITERATIONS)]
+                results = list(tqdm(Executor.map(benchmark_encrypter, encryption_workers), total=len(encryption_workers))) 
+            with open(csv_filename, 'w+') as csv_file:
+                csvwriter = csv.writer(csv_file)
+                csvwriter.writerow(CSV_fIELDS)
+                for i, r in enumerate(results):
+                    csvwriter.writerow([i, r.encryption_time, r.verification_time, r.verified])
+                    if not r.verified:
+                        print('Something is wrong')
+
 
     print('========Hashing algorithms section========')
     for Hasher in hashers.Hasher.__subclasses__():
@@ -115,12 +138,21 @@ def run_algorithms():
             print(f'Skipping: {Hasher.__name__}')
             continue
         print(f'testing: {Hasher.__name__}')
-        for test in tqdm(test_files):
-            for iteration in tqdm(range(NUM_ITERATIONS)):
-                working_hasher = Hasher(test)
-                test_result = benchmark_hasher(working_hasher)
-                if not test_result.verified:
-                    print('Something is wrong')
+        for test in test_files:
+            test_file_name = os.path.basename(test)
+            csv_filename = os.path.join(RESULTS_FOLDER_PATH, f'{Hasher.__name__}_{test_file_name.split(".")[0]}.csv')
+            print(f'Test vector: {os.path.basename(test)}')
+            results = []
+            with concurrent.futures.ProcessPoolExecutor(max_workers=cores) as Executor:
+                hash_workers = [Hasher(test) for _ in range(NUM_ITERATIONS)]
+                results = list(tqdm(Executor.map(benchmark_hasher, hash_workers), total=len(hash_workers)))
+            with open(csv_filename, 'w+') as csv_file:
+                csvwriter = csv.writer(csv_file)
+                csvwriter.writerow(CSV_fIELDS)
+                for i, r in enumerate(results):
+                    csvwriter.writerow([i, r.encryption_time, r.verification_time, r.verified])
+                    if not r.verified:
+                        print('Something is wrong')
 
     print('========Signing algorithms section========')
     for Signer in signers.Signer.__subclasses__():
@@ -128,12 +160,22 @@ def run_algorithms():
             print(f'Skipping: {Signer.__name__}')
             continue
         print(f'testing: {Signer.__name__}')
-        for test in tqdm(test_files):
-            for iteration in tqdm(range(NUM_ITERATIONS)):
-                working_singer = Signer(test)
-                test_result = benchmark_signer(working_singer)
-                if not test_result.verified:
-                    print('Something is wrong')
+        for test in test_files:
+            test_file_name = os.path.basename(test)
+            csv_filename = os.path.join(RESULTS_FOLDER_PATH, f'{Signer.__name__}_{test_file_name.split(".")[0]}.csv')
+            print(f'Test vector: {os.path.basename(test)}')
+            results = []
+            with concurrent.futures.ProcessPoolExecutor(max_workers=cores) as Executor:
+                sign_workers = [Signer(test) for _ in range(NUM_ITERATIONS)]
+                results = list(tqdm(Executor.map(benchmark_signer, sign_workers), total=len(sign_workers)))
+            with open(csv_filename, 'w+') as csv_file:
+                csvwriter = csv.writer(csv_file)
+                csvwriter.writerow(CSV_fIELDS)
+                for i, r in enumerate(results):
+                    csvwriter.writerow([i, r.encryption_time, r.verification_time, r.verified])
+                    if not r.verified:
+                        print('Something is wrong')
+
 
 
 if __name__ == '__main__':
