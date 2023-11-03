@@ -1,6 +1,6 @@
 {
     "testFolderPath": "test-files",
-    "numberOfIterations": 100,
+    "numberOfIterations": 300,
     "enableMultiprocessing": true,
     "resultsFolderPath": "results",
     "desableEncryptionAlgorithm": [
