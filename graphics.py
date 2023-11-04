@@ -2,6 +2,8 @@ import hashers, signers, encrypters, os, csv, json
 import matplotlib.pylab as plt
 from runners import CONFIG_DATA
 
+RESULTS_PATH = "plots"
+
 #Función que realiza el promedio de los tiempos
 def avg(rows):
     add = sum(rows)
@@ -29,7 +31,7 @@ def graphic_type(name,avg_data,mode):
     plt.ylabel('Time in miliseconds')
     plt.title(f'{" ".join(name.split("_"))} {mode}'.upper())
     #Guardamos las gráficas de puntos
-    plt.savefig(os.path.join('Graphics_Results', f'{name}_{mode}.png'))
+    plt.savefig(os.path.join(RESULTS_PATH, f'{name}_{mode}.png'))
     
     #Limpia el buffer de las gráficas ()
     plt.clf()
@@ -49,7 +51,7 @@ def bar_graphic(name,avg_data,type_Al):
         plt.text(algorithm, time, (f'{time: .4f}'), ha='center', va='bottom')
     
     #Guardamos las gráficas de barras
-    plt.savefig(os.path.join('Graphics_Results', f'{type_Al}_{name}.png'))
+    plt.savefig(os.path.join(RESULTS_PATH, f'{type_Al}_{name}.png'))
 
     plt.clf()
 
@@ -99,7 +101,7 @@ def graphics():
     
     #Creamos la carpeta donde se van a guardar las imagenes de las gráficas de puntos y de barras
     try:
-        os.mkdir('Graphics_Results')
+        os.mkdir(RESULTS_PATH)
     except:
         print('Folder already exist')
     
