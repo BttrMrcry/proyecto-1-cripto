@@ -7,7 +7,7 @@ En la lista siguiente se muestran los requisitos necesarios para correr la prueb
 
 - **Conexión a internet**
 - **Docker Engine**. Las instrucciones de instalación se pueden encontrar [aquí](https://docs.docker.com/get-docker/).
-- **Git**. Click a [aquí](https://git-scm.com/downloads) para ver las instrucciones de instalación.
+- **Git**. Click [aquí](https://git-scm.com/downloads) para ver las instrucciones de instalación.
 - **Linux o macOS** (Windows también funciona si se corren manualmente los comandos de Docker)
 
 El programa ha sido probado en Ubuntu 20.04 y macOS Sonoma. También funciona en Windows 10 y Windows 11, pero la ejecución de los comandos de Docker se debe hacer manualmente.
@@ -65,7 +65,7 @@ El resto de los comando los ejecutaremos en el directorio del repositorio, asi q
     cd proyecto1-crypto
 
 ## Configuración opcional
-El proyecto esta configurado por defecto para realizar 100 iteraciones por algoritmo utilizando multi-procesamiento. Esta configuración es solo con fines demostrativos. Los datos reales se generaron con 200 iteraciones con multi-procesamiento deshabilitado. Esta configuración se puede modificar en *settings.json*.
+El proyecto esta configurado por defecto para realizar 100 iteraciones por algoritmo utilizando multi-procesamiento. Esta configuración es solo con fines demostrativos. Los datos reales se generaron con 200 iteraciones con multi-procesamiento deshabilitado. Esta configuración se puede modificar en `settings.json`.
 
 ```json
 {
