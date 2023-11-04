@@ -62,7 +62,7 @@ Primero se debe clonar el repositorio. Esto lo puede realizar con el comando sig
 
 El resto de los comando los ejecutaremos en el directorio del repositorio, asi que nos moveremos a él con el comando siguiente.
 
-    cd proyecto-1-crypto
+    cd proyecto-1-cripto
 
 ## Configuración opcional
 El proyecto esta configurado por defecto para realizar 100 iteraciones por algoritmo utilizando multi-procesamiento. Esta configuración es solo con fines demostrativos. Los datos reales se generaron con 200 iteraciones con multi-procesamiento deshabilitado. Esta configuración se puede modificar en `settings.json`.
