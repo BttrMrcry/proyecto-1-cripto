@@ -79,7 +79,7 @@ class ScryptAlgorithm(Hasher):
         self.salt = urandom(128)
         self.kdf = Scrypt(
             salt=self.salt,
-            length=4,
+            length=32,
             n=2**14,
             r=8,
             p=1
@@ -99,7 +99,7 @@ class ScryptAlgorithm(Hasher):
     def prepare_verify(self) -> None:
         self.kdf = Scrypt(
             salt=self.salt,
-            length=4,
+            length=32,
             n=2**14,
             r=8,
             p=1
